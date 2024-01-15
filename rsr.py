@@ -57,6 +57,7 @@ def sensor_bandpass(
                 np.array([f["wavelength"][:], f["RSR"][:][idx, :]]).T,
                 f0_hs,
             )
+            rot = np.around(rot, 6)
             rayleigh_optical_thickness.append(rot)
             k_oz1 = Spectral_Characterization(
                 k_o3_anderson_hs,
@@ -73,6 +74,7 @@ def sensor_bandpass(
                 np.array([f["wavelength"][:], f["RSR"][:][idx, :]]).T,
                 f0_hs,
             )
+            depolar = np.around(depolar, 6)
             depolarization_factor.append(depolar)
             f0 = Spectral_Characterization(
                 f0_hs,
