@@ -51,41 +51,47 @@ def sensor_bandpass(
         k_no2 = [""]
         for idx, band in enumerate(f["bands"][:]):
             band_num.append(idx + 1)
-            nominal_center_wavelength.append(band)
+            wavelength = f["wavelength"][:]
+            RSR = f["RSR"][:][idx, :]
+
+            # 计算中心波长
+            center_wavelength = np.sum(wavelength * RSR) / np.sum(RSR)
+            nominal_center_wavelength.append(center_wavelength)
+
             rot = Spectral_Characterization(
                 rayleigh_bodhaine_hs[:, [0, 1]],
-                np.array([f["wavelength"][:], f["RSR"][:][idx, :]]).T,
+                np.array([wavelength, RSR]).T,
                 f0_hs,
             )
             rot = np.around(rot, 6)
             rayleigh_optical_thickness.append(rot)
             k_oz1 = Spectral_Characterization(
                 k_o3_anderson_hs,
-                np.array([f["wavelength"][:], f["RSR"][:][idx, :]]).T,
+                np.array([wavelength, RSR]).T,
                 f0_hs,
             )
             k_oz.append(k_oz1)
             k_no21 = Spectral_Characterization(
-                k_no2_hs, np.array([f["wavelength"][:], f["RSR"][:][idx, :]]).T, f0_hs
+                k_no2_hs, np.array([wavelength, RSR]).T, f0_hs
             )
             k_no2.append(k_no21)
             depolar = Spectral_Characterization(
                 rayleigh_bodhaine_hs[:, [0, -1]],
-                np.array([f["wavelength"][:], f["RSR"][:][idx, :]]).T,
+                np.array([wavelength, RSR]).T,
                 f0_hs,
             )
             depolar = np.around(depolar, 6)
             depolarization_factor.append(depolar)
             f0 = Spectral_Characterization(
                 f0_hs,
-                np.array([f["wavelength"][:], f["RSR"][:][idx, :]]).T,
+                np.array([wavelength, RSR]).T,
                 np.array([1]),
             )
             solar_irradiance.append(f0 * 10)
         df = pd.DataFrame(
             {
                 "Band Num": band_num,
-                " Nominal Center Wavelength": nominal_center_wavelength,
+                "Nominal Center Wavelength": nominal_center_wavelength,
                 "Solar Irradiance": solar_irradiance,
                 "Rayleigh Optical Thickness": rayleigh_optical_thickness,
                 "Depolarization Factor": depolarization_factor,
