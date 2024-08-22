@@ -1,1 +1,4 @@
-.venv_mini
+.venv_*
+__pycache__
+.vscode
+.DS_Store
