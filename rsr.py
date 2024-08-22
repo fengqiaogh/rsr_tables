@@ -3,39 +3,6 @@ import numpy as np
 import pandas as pd
 
 
-def gen_RSR(bands, wavelength, data):
-    with h5py.File("gk2b_goci2_RSR.h5", "w") as f:
-        dbands = f.create_dataset(
-            "bands",
-            data=bands,
-        )
-        dbands.attrs["long_name"] = "bands"
-
-        dbands.attrs["units"] = "nm"
-        dbands.attrs["valid_max"] = 3000
-        dbands.attrs["vaild_min"] = 100
-
-        dbands = f.create_dataset(
-            "wavelength",
-            data=wavelength,
-        )
-        dbands.attrs["long_name"] = "wavelength"
-
-        dbands.attrs["units"] = "nm"
-        dbands.attrs["valid_max"] = 3000
-        dbands.attrs["vaild_min"] = 100
-
-        dRSR = f.create_dataset(
-            "RSR",
-            data=data,
-        )
-        dRSR.attrs["long_name"] = "Relative Spectral Response"
-
-        dRSR.attrs["units"] = "none"
-        dRSR.attrs["valid_max"] = 1.0
-        dRSR.attrs["vaild_min"] = 0.0
-
-
 def sensor_bandpass(
     sensor, sensor_RSR, rayleigh_bodhaine_hs, k_o3_anderson_hs, k_no2_hs, f0_hs
 ):
@@ -99,7 +66,7 @@ def sensor_bandpass(
                 "k_no2 (NO2)": k_no2,
             }
         )
-        df.to_csv(f"{sensor}_bandpass.csv", index=False)
+        df.to_csv(f"bandpass/{sensor}_bandpass.csv", index=False)
 
 
 def Spectral_Characterization(x, rsr, w):
