@@ -1,16 +1,30 @@
-import h5py
 import numpy as np
 import pandas as pd
+import h5netcdf
+
+from pathlib import Path
+
+
+def load_spectral_source_data(type="1nm"):
+    # Data from NASA Ocean Color
+    # https://oceancolor.gsfc.nasa.gov/resources/docs/rsr_tables/
+    f0_hs = np.loadtxt(f"spectral_source_data/{type}/f0.txt", skiprows=15)
+    rayleigh_bodhaine_hs = np.loadtxt(
+        f"spectral_source_data/{type}/rayleigh_bodhaine.txt", skiprows=16
+    )
+    k_no2_hs = np.loadtxt(f"spectral_source_data/{type}/k_no2.txt", skiprows=19)
+    k_o3_anderson_hs = np.loadtxt(
+        f"spectral_source_data/{type}/k_o3_anderson.txt", skiprows=19
+    )
+    return f0_hs, rayleigh_bodhaine_hs, k_o3_anderson_hs, k_no2_hs
 
 
 def sensor_bandpass(
-    sensor, sensor_RSR, rayleigh_bodhaine_hs, k_o3_anderson_hs, k_no2_hs, f0_hs
+    sensor_RSR, rayleigh_bodhaine_hs, k_o3_anderson_hs, k_no2_hs, f0_hs
 ):
-    with h5py.File(sensor_RSR) as f:
+    with h5netcdf.File(sensor_RSR) as f:
         band_num = [""]
         nominal_center_wavelength = ["nm"]
-        center_wavelength = ["nm"]
-        width = ["nm"]
         solar_irradiance = ["W/m^2/um"]
         rayleigh_optical_thickness = [""]
         depolarization_factor = [""]
@@ -21,40 +35,47 @@ def sensor_bandpass(
             wavelength = f["wavelength"][:]
             RSR = f["RSR"][:][idx, :]
 
-            # 计算中心波长
-            center_wavelength = np.sum(wavelength * RSR) / np.sum(RSR)
-            nominal_center_wavelength.append(center_wavelength)
+            # 中心波长
+            nominal_center_wavelength.append(band)
 
             rot = Spectral_Characterization(
                 rayleigh_bodhaine_hs[:, [0, 1]],
                 np.array([wavelength, RSR]).T,
                 f0_hs,
             )
-            rot = np.around(rot, 6)
+            rot = np.around(rot, 3)
             rayleigh_optical_thickness.append(rot)
+
             k_oz1 = Spectral_Characterization(
                 k_o3_anderson_hs,
                 np.array([wavelength, RSR]).T,
                 f0_hs,
             )
+            k_oz1 = np.format_float_scientific(k_oz1, precision=3)
             k_oz.append(k_oz1)
+
             k_no21 = Spectral_Characterization(
                 k_no2_hs, np.array([wavelength, RSR]).T, f0_hs
             )
+            k_no21 = np.format_float_scientific(k_no21, precision=3)
             k_no2.append(k_no21)
+
             depolar = Spectral_Characterization(
                 rayleigh_bodhaine_hs[:, [0, -1]],
                 np.array([wavelength, RSR]).T,
                 f0_hs,
             )
-            depolar = np.around(depolar, 6)
+            depolar = np.around(depolar, 3)
             depolarization_factor.append(depolar)
+
             f0 = Spectral_Characterization(
                 f0_hs,
                 np.array([wavelength, RSR]).T,
                 np.array([1]),
             )
-            solar_irradiance.append(f0 * 10)
+            f0 = np.around(f0 * 10, 3)
+            solar_irradiance.append(f0)
+
         df = pd.DataFrame(
             {
                 "Band Num": band_num,
@@ -66,7 +87,18 @@ def sensor_bandpass(
                 "k_no2 (NO2)": k_no2,
             }
         )
-        df.to_csv(f"bandpass/{sensor}_bandpass.csv", index=False)
+
+        sensor = "_".join(Path(sensor_RSR).name.split("_")[:2])
+        # df.to_csv(f"bandpass/{sensor}_bandpass.csv", index=False)
+
+        # 将DataFrame转换为Markdown格式
+        markdown_output = df.to_markdown(index=False)
+
+        # 将Markdown写入文件
+        with open(f"bandpass/{sensor}_bandpass.md", "w") as f_markdown:
+            f_markdown.write(markdown_output)
+
+        print(f"Markdown file saved as bandpass/{sensor}_bandpass.md")
 
 
 def Spectral_Characterization(x, rsr, w):
