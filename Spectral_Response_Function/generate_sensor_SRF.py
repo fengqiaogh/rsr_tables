@@ -59,20 +59,29 @@ def Himawari_8_AHI():
     return sensor, bands, wavelengths, RSR
 
 
-def GF6_PMS():
-    sensor = "gf6_pms"
-    df = pd.read_excel("Spectral_Response_Function/raw_data/GF-6 PMS.xlsx")
+def GF_PMS(sensor="gf6"):
+    match sensor:
+        case "gf6":
+            data_name = "GF-6 PMS.xlsx"
+        case "gf5":
+            data_name = "GF-5 PMS.xlsx"
+        case "gf4":
+            data_name = "GF-4 PMS.xlsx"
+        case _:
+            raise ValueError("sensor not supported")
+
+    df = pd.read_excel(f"Spectral_Response_Function/raw_data/{data_name}")
 
     # bands = ["PAN", "B1", "B2", "B3", "B4"]
     wavelengths = df["波长/nm"].values
     RSR = df[["PAN", "B1", "B2", "B3", "B4"]].values
-    return sensor, wavelengths, RSR.T
+    return f"{sensor}_pms", wavelengths, RSR.T
 
 
 def main():
     # Himawari_8_AHI()
 
-    sensor, wavelengths, RSR = GF6_PMS()
+    sensor, wavelengths, RSR = GF_PMS(sensor="gf4")
     generate_sensor_SRF(sensor, wavelengths, RSR)
 
 
