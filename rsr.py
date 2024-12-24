@@ -36,14 +36,14 @@ def sensor_bandpass(
             RSR = f["RSR"][:][idx, :]
 
             # 中心波长
-            nominal_center_wavelength.append(band)
+            nominal_center_wavelength.append(int(band))
 
             rot = Spectral_Characterization(
                 rayleigh_bodhaine_hs[:, [0, 1]],
                 np.array([wavelength, RSR]).T,
                 f0_hs,
             )
-            rot = np.around(rot, 3)
+            rot = np.format_float_scientific(rot, precision=3)
             rayleigh_optical_thickness.append(rot)
 
             k_oz1 = Spectral_Characterization(
@@ -65,7 +65,7 @@ def sensor_bandpass(
                 np.array([wavelength, RSR]).T,
                 f0_hs,
             )
-            depolar = np.around(depolar, 3)
+            depolar = np.format_float_scientific(depolar, precision=3)
             depolarization_factor.append(depolar)
 
             f0 = Spectral_Characterization(
@@ -101,7 +101,7 @@ def sensor_bandpass(
         print(f"Markdown file saved as bandpass/{sensor}_bandpass.md")
 
 
-def Spectral_Characterization(x, rsr, w):
+def Spectral_Characterization(x, rsr, w=np.array([1])):
     wa_min = rsr[:, 0].min()
     wa_max = rsr[:, 0].max()
     x_wa_min = np.argwhere(x[:, 0] == wa_min)[0, 0]

@@ -78,10 +78,21 @@ def GF_PMS(sensor="gf6"):
     return f"{sensor}_pms", wavelengths, RSR.T
 
 
+def COMS_GOCI():
+    sensor = "coms_goci"
+    RSR = np.loadtxt(
+        "Spectral_Response_Function/raw_data/GOCI_SRF_350_to_1025_normalized.txt",
+        skiprows=1,
+    )
+    wavelengths = RSR[:, 0]
+    return sensor, wavelengths, RSR[:, 1:].T
+
+
 def main():
     # Himawari_8_AHI()
 
-    sensor, wavelengths, RSR = GF_PMS(sensor="gf4")
+    # sensor, wavelengths, RSR = GF_PMS(sensor="gf4")
+    sensor, wavelengths, RSR = COMS_GOCI()
     generate_sensor_SRF(sensor, wavelengths, RSR)
 
 
